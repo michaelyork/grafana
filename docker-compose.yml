@@ -1,0 +1,45 @@
+services:
+  grafana:
+    image: grafana/grafana:13.1.1
+    restart: unless-stopped
+    depends_on:
+      grafana-db:
+        condition: service_healthy
+    environment:
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: grafana-db:5432
+      GF_DATABASE_NAME: grafana
+      GF_DATABASE_USER: postgres
+      GF_DATABASE_PASSWORD: ${SERVICE_PASSWORD_GRAFANA_DB}
+      GF_SECURITY_SECRET_KEY: ${GRAFANA_SECRET_KEY:?}
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${SERVICE_PASSWORD_GRAFANA_ADMIN}
+      GF_SECURITY_DISABLE_GRAVATAR: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_LOGIN_MAXIMUM_INACTIVE_LIFETIME_DURATION: 12M
+      GF_AUTH_LOGIN_MAXIMUM_LIFETIME_DURATION: 12M
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_PLUGINS_PREINSTALL: grafana-clock-panel@3.2.2
+      GF_SERVER_ROOT_URL: https://grafana.york.network
+      TZ: America/Los_Angeles
+    expose:
+      - "3000"
+
+  grafana-db:
+    image: postgres:17.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_GRAFANA_DB}
+      POSTGRES_DB: grafana
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d grafana"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - grafana-db:/var/lib/postgresql/data
+
+volumes:
+  grafana-db:
