@@ -29,7 +29,7 @@ services:
       - "3000"
 
   grafana-db:
-    image: postgres:17.4
+    image: postgres:17.11
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
